@@ -1,0 +1,46 @@
+{
+  "name": "kbotify-template",
+  "version": "0.0.1",
+  "description": "Starter kit for kBotify bots",
+  "author": "FlappyIce",
+  "license": "MIT",
+  "homepage": "https://github.com/fi6/kbotify-template#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fi6/kbotify-template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fi6/kbotify-template/issues"
+  },
+  "keywords": [
+    "kbotify",
+    "kaiheila",
+    "bot"
+  ],
+  "main": "src/index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --nolazy -r ts-node/register -r tsconfig-paths/register src/index.ts"
+  },
+  "dependencies": {
+    "@types/request": "^2.48.8",
+    "@typescript-eslint/eslint-plugin": "^5.32.0",
+    "@typescript-eslint/parser": "^5.32.0",
+    "kbotify": "^0.2.5",
+    "lrc-kit": "^1.1.1",
+    "prettier": "^2.7.1",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^0.25.2",
+    "eslint": "8.21.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-no-null": "^1.0.2",
+    "eslint-plugin-prettier": "^3.4.0",
+    "tsconfig-paths": "^3.10.1",
+    "typescript": "^4.3.5"
+  }
+}
