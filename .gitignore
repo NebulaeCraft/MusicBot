@@ -103,7 +103,7 @@ dist
 # TernJS port file
 .tern-port
 
-src/configs/auth*
+src/configs/auth.ts
 src/commands/config/*
 res/*
 .DS_Store

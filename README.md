@@ -2,20 +2,22 @@
 
 A new version of NebulaeRobot which is used to play music in a [KOOK](https://www.kookapp.cn/) channel.
 
-SDK: [khl.py](https://github.com/TWT233/khl.py)
+SDK: [kBotify](https://github.com/fi6/kbotify)
 
 # Prepare
-## Install khl.py
+## Install Dependencies
 
-Python version: >=3.6
 ```bash
-pip install khl.py
+pnpm install
 ```
 
 ## Config
-rename `config/config.json.example` to `config/config.json` and fill the `token` param.
+rename `configs/auth.example.ts` to `config/auth.ts` and fill the `khltoken` param.
 
 # Run
 ```bash
-python bot.py
+ts-node src/index.ts
 ```
+
+---
+Update to SDK [kook.ts](https://github.com/kookts/kook.ts) in WIP.
