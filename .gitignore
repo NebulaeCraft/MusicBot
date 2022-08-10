@@ -105,6 +105,6 @@ dist
 
 src/configs/auth*
 src/commands/config/*
-res/
+res/*
 .DS_Store
 *.tsbk

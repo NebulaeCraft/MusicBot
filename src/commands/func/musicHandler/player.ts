@@ -41,7 +41,7 @@ class PlayerStatus {
   lastPlayTime: number | undefined
   channel: number | string | undefined
   lastChannel: number | string | undefined
-  ifLyric = true
+  ifLyric = false
   volume = -25
   apiBase1 = 'http://163.ishirai.cc:3000'
   apiBase2 = 'http://163.ishirai.cc:3000'
@@ -60,6 +60,8 @@ class Player {
   }
 
   async downloadFile(uri: string, filename: string) {
+    if (uri === undefined)
+      throw new Error('uri undefined')
     return new Promise((resolve) => {
       const stream = fs.createWriteStream(filename)
       console.log(`start downloading ${filename}`)
@@ -91,7 +93,7 @@ class Player {
   async push(music: Music) {
     console.log(`push ${music.name}`)
 
-    let url: string, filename: string
+    let url: string, filename: string, isSuccess: boolean
     await (axios.get(`${this.status.apiBase1}/song/url?id=${music.id}`, {
       headers: {
         Cookie: path.cookie,
@@ -100,15 +102,26 @@ class Player {
       .then(({ data }) => {
         url = data.data[0].url
         filename = `./res/${music.id}.mp3`
+        isSuccess = true
       }))
       .then(async () => {
-        await this.downloadFile(url, filename).then(() => {
-          this.status.playlist.push(music)
-        }).then(() => {
-          return true
-        })
+        await this.downloadFile(url, filename)
+          .catch((e: Error) => {
+            console.log(`${music.name} download failed`)
+            console.log(e)
+            isSuccess = false
+            return false
+          })
+          .then(() => {
+            if (isSuccess)
+              this.status.playlist.push(music)
+          }).then(() => {
+            return true
+          })
       }).then(() => {
         return true
+      }).then(() => {
+        return isSuccess
       })
   }
 
