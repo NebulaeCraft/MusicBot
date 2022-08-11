@@ -1,7 +1,7 @@
 import type { AppFunc, BaseSession } from 'kbotify'
-import { AppCommand } from 'kbotify'
+import { AppCommand, Card } from 'kbotify'
 import axios from 'axios'
-import { player } from './musicHandler/player'
+import { type Music, player } from './musicHandler/player'
 
 class ListMenu extends AppCommand {
   code = 'play'
@@ -28,11 +28,18 @@ class ListMenu extends AppCommand {
             const testmusic = await player.fetch(Number(song.id))
             console.log(JSON.stringify(testmusic))
 
-            await player.push(testmusic).then(async () => {
-              session.send(`${song.name} 已加入播放列表`)
-              if (!player.status.isPlaying)
-                player.play(session)
-            })
+            if (testmusic !== false) {
+              await player.push(testmusic as Music).then(async () => {
+                session.sendCard(new Card().addText(`${(testmusic as Music).name} 已加入播放列表`).toString())
+                setTimeout(() => {
+                  if (!player.status.isPlaying)
+                    player.play(session)
+                }, 5000)
+              })
+            }
+            else {
+              session.send('歌曲信息拉取失败')
+            }
           })
         })
     })

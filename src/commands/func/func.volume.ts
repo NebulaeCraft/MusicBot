@@ -13,7 +13,12 @@ class VolumeMenu extends AppCommand {
       session.send(`当前音量: ${player.status.volume}dB, 默认:-25dB`)
     }
     else {
-      player.status.volume = parseInt(session.args[0])
+      let volume = parseInt(session.args[0])
+      if (volume >= 0)
+        volume = 0
+      else if (volume <= -30)
+        volume = -25
+      player.status.volume = volume
       session.send(`已设置音量为${player.status.volume}dB`)
     }
   }

@@ -25,7 +25,7 @@ import path from '../../config/config'
 //   }
 // }
 
-interface Music {
+export interface Music {
   id: number
   name: string
   dt: number
@@ -182,6 +182,9 @@ class Player {
         })
         music = { id: musicID, name: data.songs[0].name, dt: data.songs[0].dt, cover: `${data.songs[0].al.picUrl}?param=130y130`, ar: arArray!.toString() }
         return music
+      }).catch((e: Error) => {
+        console.log(e)
+        return false
       })
   }
 
