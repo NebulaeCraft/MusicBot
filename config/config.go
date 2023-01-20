@@ -8,6 +8,7 @@ import (
 
 type envConfig struct {
 	BotToken string `yaml:"BotToken"`
+	WebPort  string `yaml:"WebPort"`
 }
 
 var Config *envConfig
@@ -24,6 +25,7 @@ func LoadConfig(filename string) error {
 		logger.Error().Err(err).Msg("Failed to read config file")
 		return err
 	}
+
 	if err = yaml.Unmarshal(ymlFile, &Config); err != nil {
 		logger.Error().Err(err).Msg("Failed to unmarshal config file")
 		return err
