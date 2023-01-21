@@ -7,8 +7,9 @@ import (
 )
 
 type envConfig struct {
-	BotToken string `yaml:"BotToken"`
-	WebPort  string `yaml:"WebPort"`
+	BotToken   string `yaml:"BotToken"`
+	WebPort    string `yaml:"WebPort"`
+	NeteaseApi string `yaml:"NeteaseApi"`
 }
 
 var Config *envConfig

@@ -5,6 +5,7 @@ import (
 	"MusicBot/config"
 	"MusicBot/handlers"
 	"MusicBot/handlers/message"
+	"MusicBot/serve/music"
 	"github.com/gin-gonic/gin"
 	"github.com/lonelyevil/kook"
 	"github.com/lonelyevil/kook/log_adapter/plog"
@@ -26,10 +27,17 @@ func main() {
 	s := kook.New(config.Config.BotToken, plog.NewLogger(logger))
 	// Setup Gin
 	ginServer := gin.Default()
+	// Setup Env
+	err = music.InitMusicEnv()
+	if err != nil {
+		logger.Error().Err(err).Msg("Init music env failed")
+		return
+	}
+
 	// Register KOOK handlers
 	handlers.RegistryHandlers(s, message.MessageHan)
 	// Register Gin handlers
-	bff.AddNewHandler(ginServer)
+	bff.RegistryHandlers(ginServer)
 
 	// Start KOOK
 	err = s.Open()
