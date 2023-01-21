@@ -3,6 +3,7 @@ package music
 import (
 	"MusicBot/config"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -184,6 +185,11 @@ type MusicInfoResp struct {
 
 func QueryMusic(id int) (*Music, error) {
 	logger := config.Logger
+	if Musics.GetMusicByID(id) != nil {
+		Musics.Add(Musics.GetMusicByID(id))
+		logger.Info().Msg(fmt.Sprintf("Music %s added from cache", Musics.GetMusicByID(id).Name))
+		return Musics.GetMusicByID(id), nil
+	}
 	url, err := QueryMusicURL(id)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to query music url")
@@ -201,6 +207,7 @@ func QueryMusic(id int) (*Music, error) {
 	}
 	music.File = path
 	logger.Info().Msgf("Music %s downloaded", music.Name)
+	Musics.Add(music)
 	return music, nil
 }
 
@@ -311,9 +318,10 @@ func QueryMusicInfo(id int) (*Music, error) {
 		ar = append(ar, v.Name)
 	}
 	return &Music{
-		ID:      id,
-		Name:    musicInfoResp.Songs[0].Name,
-		Artists: ar,
-		Album:   musicInfoResp.Songs[0].Al.PicURL,
+		ID:       id,
+		Name:     musicInfoResp.Songs[0].Name,
+		Artists:  ar,
+		Album:    musicInfoResp.Songs[0].Al.PicURL,
+		LastTime: musicInfoResp.Songs[0].Dt,
 	}, nil
 }
