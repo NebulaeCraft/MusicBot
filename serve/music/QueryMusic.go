@@ -218,7 +218,7 @@ func QueryMusicURL(id int) (string, error) {
 		Quality: "standard",
 	}
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", config.Config.NeteaseApi+"/song/url/v1", nil)
+	req, err := http.NewRequest("GET", config.Config.NeteaseAPI+"/song/url/v1", nil)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to create request")
 		return "", err
@@ -282,7 +282,7 @@ func DownloadMusic(id int, url string) (string, error) {
 func QueryMusicInfo(id int) (*Music, error) {
 	logger := config.Logger
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", config.Config.NeteaseApi+"/song/detail", nil)
+	req, err := http.NewRequest("GET", config.Config.NeteaseAPI+"/song/detail", nil)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to create request")
 		return nil, err

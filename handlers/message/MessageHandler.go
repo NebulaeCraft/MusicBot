@@ -9,12 +9,23 @@ import (
 )
 
 func MessageHan(ctx *kook.KmarkdownMessageContext) {
+	logger := config.Logger
 	if ctx.Common.Type != kook.MessageTypeKMarkdown || ctx.Extra.Author.Bot {
 		return
 	}
+	logger.Info().Msg("Message received: " + ctx.Common.Content)
 	if strings.HasPrefix(ctx.Common.Content, "/n ") {
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/n ")
 		MusicMessageHandler(ctx)
+	} else if strings.HasPrefix(ctx.Common.Content, "ping") {
+		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "ping")
+		_, _ = ctx.Session.MessageCreate(&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				TargetID: ctx.Common.TargetID,
+				Content:  "pong",
+				Quote:    ctx.Common.MsgID,
+			},
+		})
 	}
 }
 
@@ -27,4 +38,5 @@ func MusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 		return
 	}
 	SendMusicCard(ctx, musicResult)
+	music.PlayMusic(musicResult)
 }

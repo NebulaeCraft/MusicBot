@@ -11,6 +11,7 @@ import (
 	"github.com/lonelyevil/kook/log_adapter/plog"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 )
 
@@ -47,7 +48,7 @@ func main() {
 	}
 	logger.Info().Msg("Bot is running")
 	// Start Gin
-	err = ginServer.Run(":" + config.Config.WebPort)
+	err = ginServer.Run(":" + strconv.Itoa(config.Config.WebPort))
 	if err != nil {
 		panic(err)
 		return

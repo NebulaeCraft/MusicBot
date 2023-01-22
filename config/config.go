@@ -7,9 +7,15 @@ import (
 )
 
 type envConfig struct {
-	BotToken   string `yaml:"BotToken"`
-	WebPort    string `yaml:"WebPort"`
-	NeteaseApi string `yaml:"NeteaseApi"`
+	BotToken     string `yaml:"BotToken"`
+	WebPort      int    `yaml:"WebPort"`
+	NeteaseAPI   string `yaml:"NeteaseApi"`
+	VoicePort    int    `yaml:"VoicePort"`
+	KOOKVoice    string `yaml:"KOOKVoice"`
+	VoiceChannel []struct {
+		Name string `yaml:"Name"`
+		ID   int64  `yaml:"ID"`
+	} `yaml:"VoiceChannel"`
 }
 
 var Config *envConfig
