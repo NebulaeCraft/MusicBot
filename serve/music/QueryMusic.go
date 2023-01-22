@@ -185,10 +185,10 @@ type MusicInfoResp struct {
 
 func QueryMusic(id int) (*Music, error) {
 	logger := config.Logger
-	if Musics.GetMusicByID(id) != nil {
-		Musics.Add(Musics.GetMusicByID(id))
-		logger.Info().Msg(fmt.Sprintf("Music %s added from cache", Musics.GetMusicByID(id).Name))
-		return Musics.GetMusicByID(id), nil
+	if Musics.GetMusicByID(strconv.Itoa(id)) != nil {
+		Musics.Add(Musics.GetMusicByID(strconv.Itoa(id)))
+		logger.Info().Msg(fmt.Sprintf("Music %s added from cache", Musics.GetMusicByID(strconv.Itoa(id)).Name))
+		return Musics.GetMusicByID(strconv.Itoa(id)), nil
 	}
 	url, err := QueryMusicURL(id)
 	if err != nil {
@@ -318,10 +318,10 @@ func QueryMusicInfo(id int) (*Music, error) {
 		ar = append(ar, v.Name)
 	}
 	return &Music{
-		ID:       id,
+		ID:       strconv.Itoa(id),
 		Name:     musicInfoResp.Songs[0].Name,
 		Artists:  ar,
-		Album:    musicInfoResp.Songs[0].Al.PicURL,
+		Album:    musicInfoResp.Songs[0].Al.PicURL + "?param=130y130",
 		LastTime: musicInfoResp.Songs[0].Dt,
 	}, nil
 }

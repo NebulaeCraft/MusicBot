@@ -21,7 +21,6 @@ func SendMusicCard(ctx *kook.KmarkdownMessageContext, music *music.Music) {
 			Content: "**歌曲：** " + music.Name + "\n**歌手：** " + strings.Join(music.Artists, ", ") + "\n**时长：** " + time.Duration(music.LastTime*1000000).String(),
 		},
 	}
-
 	cardMsg.AddModule(section.SetAccessory(&kook.CardMessageElementImage{
 		Src:  music.Album,
 		Size: "lg",

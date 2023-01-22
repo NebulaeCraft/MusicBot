@@ -3,6 +3,7 @@ package message
 import (
 	"MusicBot/config"
 	"MusicBot/serve/music"
+	"MusicBot/serve/music/bili"
 	"fmt"
 	"github.com/lonelyevil/kook"
 	"strconv"
@@ -37,6 +38,9 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 		// Change channel
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/c ")
 		ChangeChannelMessageHandler(ctx)
+	} else if strings.HasPrefix(ctx.Common.Content, "/b ") {
+		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/b ")
+		BiliMessageHandler(ctx)
 	}
 }
 
@@ -52,6 +56,23 @@ func NeteaseMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	if err != nil {
 		logger.Error().Err(err).Msg("Query music failed")
 		SendMsg(ctx, "查询音乐失败")
+		return
+	}
+	SendMusicCard(ctx, musicResult)
+	music.PlayMusic(musicResult)
+}
+
+func BiliMessageHandler(ctx *kook.KmarkdownMessageContext) {
+	logger := config.Logger
+	if !(strings.HasPrefix(ctx.Common.Content, "av") || strings.HasPrefix(ctx.Common.Content, "AV") || strings.HasPrefix(ctx.Common.Content, "bv") || strings.HasPrefix(ctx.Common.Content, "BV")) {
+		logger.Error().Msg("Parse video id failed")
+		SendMsg(ctx, "解析AV/BV失败：输入不合法")
+		return
+	}
+	musicResult, err := bili.QueryBiliAudio(ctx.Common.Content)
+	if err != nil {
+		logger.Error().Err(err).Msg("Query audio failed")
+		SendMsg(ctx, "查询视频失败")
 		return
 	}
 	SendMusicCard(ctx, musicResult)
