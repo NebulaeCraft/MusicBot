@@ -1,3 +1,8 @@
 BotToken: TOKEN
 WebPort: 8080
 NeteaseApi: http://localhost:3000
+VoicePort: 5559
+KOOKVoice: ./assets/dist/kookvoice-arm64-darwin
+VoiceChannel:
+  - Name: Sample
+    ID: CHANNELID
