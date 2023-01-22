@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"github.com/phuslu/log"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
@@ -38,4 +39,13 @@ func LoadConfig(filename string) error {
 		return err
 	}
 	return nil
+}
+
+func FindChannelID(name string) (int64, error) {
+	for _, v := range Config.VoiceChannel {
+		if v.Name == name {
+			return v.ID, nil
+		}
+	}
+	return 0, errors.New("channel not found")
 }
