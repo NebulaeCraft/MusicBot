@@ -5,6 +5,7 @@ import (
 	"MusicBot/serve/music"
 	"MusicBot/serve/music/Bili"
 	"MusicBot/serve/music/NetEase"
+	"MusicBot/serve/music/QQ"
 	"fmt"
 	"github.com/lonelyevil/kook"
 	"strconv"
@@ -20,7 +21,7 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 	if strings.HasPrefix(ctx.Common.Content, "/n ") {
 		// Netease Music
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/n ")
-		NeteaseMusicMessageHandler(ctx)
+		NetEaseMusicMessageHandler(ctx)
 	} else if strings.HasPrefix(ctx.Common.Content, "ping") {
 		// Ping
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "ping")
@@ -40,12 +41,17 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/c ")
 		ChangeChannelMessageHandler(ctx)
 	} else if strings.HasPrefix(ctx.Common.Content, "/b ") {
+		// Bilibili
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/b ")
 		BiliMessageHandler(ctx)
+	} else if strings.HasPrefix(ctx.Common.Content, "/q ") {
+		// QQ Music
+		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/q ")
+		QQMusicMessageHandler(ctx)
 	}
 }
 
-func NeteaseMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
+func NetEaseMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	logger := config.Logger
 	id, err := strconv.ParseInt(ctx.Common.Content, 10, 64)
 	if err != nil {
@@ -54,6 +60,20 @@ func NeteaseMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 		return
 	}
 	musicResult, err := NetEase.QueryMusic(int(id))
+	if err != nil {
+		logger.Error().Err(err).Msg("Query music failed")
+		SendMsg(ctx, "查询音乐失败")
+		return
+	}
+	SendMsg(ctx, fmt.Sprintf("%s 已加入播放列表", musicResult.Name))
+	music.Musics.Add(musicResult)
+	go music.Musics.Play(ctx)
+}
+
+func QQMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
+	logger := config.Logger
+	id := ctx.Common.Content
+	musicResult, err := QQ.QueryMusic(id)
 	if err != nil {
 		logger.Error().Err(err).Msg("Query music failed")
 		SendMsg(ctx, "查询音乐失败")

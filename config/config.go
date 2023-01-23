@@ -13,6 +13,7 @@ type envConfig struct {
 	WebPort       int    `yaml:"WebPort"`
 	NetEaseAPI    string `yaml:"NetEaseApi"`
 	NetEaseCookie string `yaml:"NetEaseCookie"`
+	QQAPI         string `yaml:"QQApi"`
 	VoicePort     int    `yaml:"VoicePort"`
 	KOOKVoice     string `yaml:"KOOKVoice"`
 	VoiceChannel  []struct {
