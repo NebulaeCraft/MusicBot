@@ -1,6 +1,7 @@
 package Bili
 
 import (
+	"MusicBot/config"
 	"MusicBot/serve/music"
 	"errors"
 	"fmt"
@@ -38,24 +39,31 @@ func ChangeFileName(serial, title string) (string, error) {
 	return "", errors.New("No such file")
 }
 
-func QueryBiliAudio(serial string) (*music.Music, error) {
-	DownloadVideoAudio(serial)
-	filename, err := QueryVideoTitle(serial)
-	if err != nil {
-		fmt.Println(err)
+func QueryBiliAudio(serial string, isBV bool) (*music.Music, error) {
+	logger := config.Logger
+	if isBV {
+		DownloadVideoAudio("BV" + serial)
+	} else {
+		DownloadVideoAudio("AV" + serial)
 	}
-	path, err := ChangeFileName(serial, filename)
+	videoInfo, err := QueryVideoInfo(serial, isBV)
 	if err != nil {
-		fmt.Println(err)
+		logger.Error().Err(err).Msg("Unable to query video info")
+		return nil, err
+	}
+	path, err := ChangeFileName(serial, videoInfo.Title)
+	if err != nil {
+		logger.Error().Err(err).Msg("Unable to change filename")
+		return nil, err
 	}
 
 	musicResp := &music.Music{
 		ID:       serial,
-		Name:     filename,
-		Artists:  nil,
-		Album:    "https://i2.hdslb.com/bfs/face/29acac2dd587c7dd4ca85f93b4d080fb17cfb401.jpg",
+		Name:     videoInfo.Title,
+		Artists:  []string{videoInfo.Up},
+		Album:    videoInfo.Cover,
 		File:     path,
-		LastTime: 0,
+		LastTime: videoInfo.Duration * 1000,
 	}
 
 	return musicResp, nil

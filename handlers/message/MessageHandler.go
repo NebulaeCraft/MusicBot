@@ -71,7 +71,21 @@ func BiliMessageHandler(ctx *kook.KmarkdownMessageContext) {
 		SendMsg(ctx, "解析AV/BV失败：输入不合法")
 		return
 	}
-	musicResult, err := Bili.QueryBiliAudio(ctx.Common.Content)
+	var musicResult *music.Music
+	var err error
+	if strings.HasPrefix(ctx.Common.Content, "av") {
+		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "av")
+		musicResult, err = Bili.QueryBiliAudio(ctx.Common.Content, false)
+	} else if strings.HasPrefix(ctx.Common.Content, "AV") {
+		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "AV")
+		musicResult, err = Bili.QueryBiliAudio(ctx.Common.Content, false)
+	} else if strings.HasPrefix(ctx.Common.Content, "bv") {
+		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "bv")
+		musicResult, err = Bili.QueryBiliAudio(ctx.Common.Content, true)
+	} else if strings.HasPrefix(ctx.Common.Content, "BV") {
+		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "BV")
+		musicResult, err = Bili.QueryBiliAudio(ctx.Common.Content, true)
+	}
 	if err != nil {
 		logger.Error().Err(err).Msg("Query audio failed")
 		SendMsg(ctx, "查询视频失败")
