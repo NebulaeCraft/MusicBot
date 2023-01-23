@@ -1,7 +1,8 @@
-package music
+package NetEase
 
 import (
 	"MusicBot/config"
+	"MusicBot/serve/music"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,7 +23,7 @@ type MusicResp struct {
 		Expi               int         `json:"expi"`
 		Type               string      `json:"type"`
 		Gain               float64     `json:"gain"`
-		Peak               int         `json:"peak"`
+		Peak               float64     `json:"peak"`
 		Fee                int         `json:"fee"`
 		Uf                 interface{} `json:"uf"`
 		Payed              int         `json:"payed"`
@@ -183,12 +184,11 @@ type MusicInfoResp struct {
 	Code int `json:"code"`
 }
 
-func QueryMusic(id int) (*Music, error) {
+func QueryMusic(id int) (*music.Music, error) {
 	logger := config.Logger
-	if Musics.GetMusicByID(strconv.Itoa(id)) != nil {
-		Musics.Add(Musics.GetMusicByID(strconv.Itoa(id)))
-		logger.Info().Msg(fmt.Sprintf("Music %s added from cache", Musics.GetMusicByID(strconv.Itoa(id)).Name))
-		return Musics.GetMusicByID(strconv.Itoa(id)), nil
+	if music.Musics.GetMusicByID(strconv.Itoa(id)) != nil {
+		logger.Info().Msg(fmt.Sprintf("Music %s added from cache", music.Musics.GetMusicByID(strconv.Itoa(id)).Name))
+		return music.Musics.GetMusicByID(strconv.Itoa(id)), nil
 	}
 	url, err := QueryMusicURL(id)
 	if err != nil {
@@ -207,7 +207,6 @@ func QueryMusic(id int) (*Music, error) {
 	}
 	music.File = path
 	logger.Info().Msgf("Music %s downloaded", music.Name)
-	Musics.Add(music)
 	return music, nil
 }
 
@@ -218,11 +217,12 @@ func QueryMusicURL(id int) (string, error) {
 		Quality: "standard",
 	}
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", config.Config.NeteaseAPI+"/song/url/v1", nil)
+	req, err := http.NewRequest("GET", config.Config.NetEaseAPI+"/song/url/v1", nil)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to create request")
 		return "", err
 	}
+	req.Header.Set("Cookie", config.Config.NetEaseCookie)
 	params := req.URL.Query()
 	params.Add("id", strconv.Itoa(musicReq.ID))
 	params.Add("level", musicReq.Quality)
@@ -279,14 +279,15 @@ func DownloadMusic(id int, url string) (string, error) {
 	return "./assets/music/N" + strconv.Itoa(id) + ".mp3", nil
 }
 
-func QueryMusicInfo(id int) (*Music, error) {
+func QueryMusicInfo(id int) (*music.Music, error) {
 	logger := config.Logger
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", config.Config.NeteaseAPI+"/song/detail", nil)
+	req, err := http.NewRequest("GET", config.Config.NetEaseAPI+"/song/detail", nil)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to create request")
 		return nil, err
 	}
+	req.Header.Set("Cookie", config.Config.NetEaseCookie)
 	params := req.URL.Query()
 	params.Add("ids", strconv.Itoa(id))
 	req.URL.RawQuery = params.Encode()
@@ -317,7 +318,7 @@ func QueryMusicInfo(id int) (*Music, error) {
 	for _, v := range musicInfoResp.Songs[0].Ar {
 		ar = append(ar, v.Name)
 	}
-	return &Music{
+	return &music.Music{
 		ID:       strconv.Itoa(id),
 		Name:     musicInfoResp.Songs[0].Name,
 		Artists:  ar,

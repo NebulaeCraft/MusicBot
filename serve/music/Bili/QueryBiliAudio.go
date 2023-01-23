@@ -1,4 +1,4 @@
-package bili
+package Bili
 
 import (
 	"MusicBot/serve/music"
@@ -48,12 +48,16 @@ func QueryBiliAudio(serial string) (*music.Music, error) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	return &music.Music{
+
+	musicResp := &music.Music{
 		ID:       serial,
 		Name:     filename,
 		Artists:  nil,
 		Album:    "https://i2.hdslb.com/bfs/face/29acac2dd587c7dd4ca85f93b4d080fb17cfb401.jpg",
 		File:     path,
 		LastTime: 0,
-	}, nil
+	}
+
+	return musicResp, nil
+
 }

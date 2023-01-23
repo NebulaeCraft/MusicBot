@@ -21,16 +21,15 @@ type MusicsList struct {
 }
 
 type Status struct {
-	Channel       int64
-	DstAddr       string
-	Volume        int
-	KOOKRunning   bool
-	KOOKCmd       *exec.Cmd
-	KOOKSignel    chan bool
-	FFmpegRunning bool
-	FFmpegCmd     *exec.Cmd
-	FFmpegSignel  chan bool
-	Music         *Music
+	Channel      int64
+	DstAddr      string
+	Volume       int
+	KOOKCmd      *exec.Cmd
+	KOOKSignel   chan bool
+	FFmpegCmd    *exec.Cmd
+	FFmpegSignel chan bool
+	PlaySignel   chan bool
+	Music        *Music
 }
 
 const (
@@ -39,7 +38,7 @@ const (
 )
 
 var Musics MusicsList
-var MusicStatus Status
+var PlayStatus Status
 
 func InitMusicEnv() error {
 	Musics.Musics = make([]Music, 0)
@@ -51,14 +50,14 @@ func InitMusicEnv() error {
 	if err != nil {
 		return err
 	}
-	MusicStatus.Channel = config.Config.VoiceChannel[0].ID
-	MusicStatus.DstAddr = fmt.Sprintf("zmq:tcp://127.0.0.1:%d", config.Config.VoicePort)
-	MusicStatus.Volume = -20
-	MusicStatus.KOOKRunning = false
-	MusicStatus.FFmpegRunning = false
-	MusicStatus.KOOKSignel = make(chan bool, 1)
-	MusicStatus.FFmpegSignel = make(chan bool, 1)
-	MusicStatus.KOOKSignel <- STOP
-	MusicStatus.FFmpegSignel <- STOP
+	PlayStatus.Channel = config.Config.VoiceChannel[0].ID
+	PlayStatus.DstAddr = fmt.Sprintf("zmq:tcp://127.0.0.1:%d", config.Config.VoicePort)
+	PlayStatus.Volume = -20
+	PlayStatus.KOOKSignel = make(chan bool, 1)
+	PlayStatus.FFmpegSignel = make(chan bool, 1)
+	PlayStatus.PlaySignel = make(chan bool, 1)
+	PlayStatus.KOOKSignel <- STOP
+	PlayStatus.FFmpegSignel <- STOP
+	PlayStatus.PlaySignel <- STOP
 	return nil
 }

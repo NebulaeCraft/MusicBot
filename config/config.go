@@ -5,15 +5,17 @@ import (
 	"github.com/phuslu/log"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"strings"
 )
 
 type envConfig struct {
-	BotToken     string `yaml:"BotToken"`
-	WebPort      int    `yaml:"WebPort"`
-	NeteaseAPI   string `yaml:"NeteaseApi"`
-	VoicePort    int    `yaml:"VoicePort"`
-	KOOKVoice    string `yaml:"KOOKVoice"`
-	VoiceChannel []struct {
+	BotToken      string `yaml:"BotToken"`
+	WebPort       int    `yaml:"WebPort"`
+	NetEaseAPI    string `yaml:"NetEaseApi"`
+	NetEaseCookie string `yaml:"NetEaseCookie"`
+	VoicePort     int    `yaml:"VoicePort"`
+	KOOKVoice     string `yaml:"KOOKVoice"`
+	VoiceChannel  []struct {
 		Name string `yaml:"Name"`
 		ID   int64  `yaml:"ID"`
 	} `yaml:"VoiceChannel"`
@@ -48,4 +50,12 @@ func FindChannelID(name string) (int64, error) {
 		}
 	}
 	return 0, errors.New("channel not found")
+}
+
+func ListChannel() string {
+	var list []string
+	for _, v := range Config.VoiceChannel {
+		list = append(list, v.Name)
+	}
+	return strings.Join(list, ", ")
 }

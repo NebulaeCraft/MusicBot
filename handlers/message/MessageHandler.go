@@ -3,7 +3,8 @@ package message
 import (
 	"MusicBot/config"
 	"MusicBot/serve/music"
-	"MusicBot/serve/music/bili"
+	"MusicBot/serve/music/Bili"
+	"MusicBot/serve/music/NetEase"
 	"fmt"
 	"github.com/lonelyevil/kook"
 	"strconv"
@@ -52,14 +53,15 @@ func NeteaseMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 		SendMsg(ctx, "解析音乐ID失败：输入不合法")
 		return
 	}
-	musicResult, err := music.QueryMusic(int(id))
+	musicResult, err := NetEase.QueryMusic(int(id))
 	if err != nil {
 		logger.Error().Err(err).Msg("Query music failed")
 		SendMsg(ctx, "查询音乐失败")
 		return
 	}
-	SendMusicCard(ctx, musicResult)
-	music.PlayMusic(musicResult)
+	SendMsg(ctx, fmt.Sprintf("%s 已加入播放列表", musicResult.Name))
+	music.Musics.Add(musicResult)
+	go music.Musics.Play(ctx)
 }
 
 func BiliMessageHandler(ctx *kook.KmarkdownMessageContext) {
@@ -69,18 +71,23 @@ func BiliMessageHandler(ctx *kook.KmarkdownMessageContext) {
 		SendMsg(ctx, "解析AV/BV失败：输入不合法")
 		return
 	}
-	musicResult, err := bili.QueryBiliAudio(ctx.Common.Content)
+	musicResult, err := Bili.QueryBiliAudio(ctx.Common.Content)
 	if err != nil {
 		logger.Error().Err(err).Msg("Query audio failed")
 		SendMsg(ctx, "查询视频失败")
 		return
 	}
-	SendMusicCard(ctx, musicResult)
-	music.PlayMusic(musicResult)
+	SendMsg(ctx, fmt.Sprintf("%s 已加入播放列表", musicResult.Name))
+	music.Musics.Add(musicResult)
+	go music.Musics.Play(ctx)
 }
 
 func ChangeVolumeMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	logger := config.Logger
+	if ctx.Common.Content == "now" {
+		SendMsg(ctx, fmt.Sprintf("当前音量: %d", music.PlayStatus.Volume))
+		return
+	}
 	volume, err := strconv.ParseInt(ctx.Common.Content, 10, 64)
 	if err != nil {
 		logger.Error().Err(err).Msg("Parse volume failed")
@@ -93,6 +100,10 @@ func ChangeVolumeMessageHandler(ctx *kook.KmarkdownMessageContext) {
 
 func ChangeChannelMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	logger := config.Logger
+	if ctx.Common.Content == "list" {
+		SendMsg(ctx, fmt.Sprintf("可用频道列表: %s", config.ListChannel()))
+		return
+	}
 	channel, err := config.FindChannelID(ctx.Common.Content)
 	if err != nil {
 		logger.Error().Err(err).Msg("Find channel failed")

@@ -1,15 +1,14 @@
-package message
+package music
 
 import (
 	"MusicBot/config"
-	"MusicBot/serve/music"
 	"fmt"
 	"github.com/lonelyevil/kook"
 	"strings"
 	"time"
 )
 
-func SendMusicCard(ctx *kook.KmarkdownMessageContext, music *music.Music) {
+func SendMusicCard(ctx *kook.KmarkdownMessageContext, musicReq *Music) {
 	logger := config.Logger
 	cardMsg := kook.CardMessageCard{
 		Theme: kook.CardThemeSuccess,
@@ -18,11 +17,11 @@ func SendMusicCard(ctx *kook.KmarkdownMessageContext, music *music.Music) {
 	section := kook.CardMessageSection{
 		Mode: kook.CardMessageSectionModeRight,
 		Text: kook.CardMessageElementKMarkdown{
-			Content: "**歌曲：** " + music.Name + "\n**歌手：** " + strings.Join(music.Artists, ", ") + "\n**时长：** " + time.Duration(music.LastTime*1000000).String(),
+			Content: "**歌曲：** " + musicReq.Name + "\n**歌手：** " + strings.Join(musicReq.Artists, ", ") + "\n**时长：** " + time.Duration(musicReq.LastTime*1000000).String(),
 		},
 	}
 	cardMsg.AddModule(section.SetAccessory(&kook.CardMessageElementImage{
-		Src:  music.Album,
+		Src:  musicReq.Album,
 		Size: "lg",
 	}))
 	cardMsgCtx, err := cardMsg.MarshalJSON()
