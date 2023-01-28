@@ -16,6 +16,7 @@ type envConfig struct {
 	QQAPI         string `yaml:"QQApi"`
 	VoicePort     int    `yaml:"VoicePort"`
 	KOOKVoice     string `yaml:"KOOKVoice"`
+	SearchLimit   int    `yaml:"SearchLimit"`
 	VoiceChannel  []struct {
 		Name string `yaml:"Name"`
 		ID   int64  `yaml:"ID"`

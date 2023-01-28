@@ -3,6 +3,7 @@ package music
 import (
 	"MusicBot/config"
 	"fmt"
+	"github.com/lonelyevil/kook"
 	"os"
 	"os/exec"
 )
@@ -21,6 +22,7 @@ type MusicsList struct {
 }
 
 type Status struct {
+	CanAppend    bool
 	Channel      int64
 	DstAddr      string
 	Volume       int
@@ -30,6 +32,7 @@ type Status struct {
 	FFmpegSignel chan bool
 	PlaySignel   chan bool
 	Music        *Music
+	Ctx          *kook.KmarkdownMessageContext
 }
 
 const (
@@ -59,5 +62,6 @@ func InitMusicEnv() error {
 	PlayStatus.KOOKSignel <- STOP
 	PlayStatus.FFmpegSignel <- STOP
 	PlayStatus.PlaySignel <- STOP
+	PlayStatus.CanAppend = true
 	return nil
 }

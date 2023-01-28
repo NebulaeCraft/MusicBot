@@ -222,7 +222,7 @@ type MusicInfoResp struct {
 					} `json:"ksong"`
 					Volume struct {
 						Gain float64 `json:"gain"`
-						Peak int     `json:"peak"`
+						Peak float64 `json:"peak"`
 						Lra  float64 `json:"lra"`
 					} `json:"volume"`
 					Label       string   `json:"label"`

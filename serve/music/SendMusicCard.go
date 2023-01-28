@@ -34,7 +34,6 @@ func SendMusicCard(ctx *kook.KmarkdownMessageContext, musicReq *Music) {
 		MessageCreateBase: kook.MessageCreateBase{
 			TargetID: ctx.Common.TargetID,
 			Content:  cardMsgCtxStr,
-			Quote:    ctx.Common.MsgID,
 			Type:     kook.MessageTypeCard,
 		},
 	})

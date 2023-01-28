@@ -88,32 +88,32 @@ type MusicInfoResp struct {
 		} `json:"al"`
 		Dt int `json:"dt"`
 		H  struct {
-			Br   int `json:"br"`
-			Fid  int `json:"fid"`
-			Size int `json:"size"`
-			Vd   int `json:"vd"`
-			Sr   int `json:"sr"`
+			Br   int     `json:"br"`
+			Fid  int     `json:"fid"`
+			Size int     `json:"size"`
+			Vd   float64 `json:"vd"`
+			Sr   int     `json:"sr"`
 		} `json:"h"`
 		M struct {
-			Br   int `json:"br"`
-			Fid  int `json:"fid"`
-			Size int `json:"size"`
-			Vd   int `json:"vd"`
-			Sr   int `json:"sr"`
+			Br   int     `json:"br"`
+			Fid  int     `json:"fid"`
+			Size int     `json:"size"`
+			Vd   float64 `json:"vd"`
+			Sr   int     `json:"sr"`
 		} `json:"m"`
 		L struct {
-			Br   int `json:"br"`
-			Fid  int `json:"fid"`
-			Size int `json:"size"`
-			Vd   int `json:"vd"`
-			Sr   int `json:"sr"`
+			Br   int     `json:"br"`
+			Fid  int     `json:"fid"`
+			Size int     `json:"size"`
+			Vd   float64 `json:"vd"`
+			Sr   int     `json:"sr"`
 		} `json:"l"`
 		Sq struct {
-			Br   int `json:"br"`
-			Fid  int `json:"fid"`
-			Size int `json:"size"`
-			Vd   int `json:"vd"`
-			Sr   int `json:"sr"`
+			Br   int     `json:"br"`
+			Fid  int     `json:"fid"`
+			Size int     `json:"size"`
+			Vd   float64 `json:"vd"`
+			Sr   int     `json:"sr"`
 		} `json:"sq"`
 		Hr                   interface{}   `json:"hr"`
 		A                    interface{}   `json:"a"`

@@ -4,6 +4,7 @@ import (
 	"MusicBot/bff"
 	"MusicBot/config"
 	"MusicBot/handlers"
+	"MusicBot/handlers/button"
 	"MusicBot/handlers/message"
 	"MusicBot/serve/music"
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ func main() {
 	}
 
 	// Register KOOK handlers
-	handlers.RegistryHandlers(s, message.MessageHan)
+	handlers.RegistryHandlers(s, message.MessageHan, button.ButtonHan)
 	// Register Gin handlers
 	bff.RegistryHandlers(ginServer)
 

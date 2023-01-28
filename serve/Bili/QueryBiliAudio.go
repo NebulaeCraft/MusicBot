@@ -31,7 +31,8 @@ func ChangeFileName(serial, title string) (string, error) {
 		return "", err
 	}
 	for _, file := range dir {
-		if strings.HasPrefix(file.Name(), title[:int(len(title)/2)]) {
+		//if strings.HasPrefix(file.Name(), title[:int(len(title)/2)]) {
+		if !(strings.HasPrefix(file.Name(), "Q") || strings.HasPrefix(file.Name(), "B") || strings.HasPrefix(file.Name(), "N") || strings.HasPrefix(file.Name(), "U")) {
 			os.Rename("./assets/music/"+file.Name(), "./assets/music/B"+serial+".mp3")
 			return "./assets/music/B" + serial + ".mp3", nil
 		}
@@ -46,14 +47,14 @@ func QueryBiliAudio(serial string, isBV bool) (*music.Music, error) {
 	} else {
 		DownloadVideoAudio("AV" + serial)
 	}
-	videoInfo, err := QueryVideoInfo(serial, isBV)
+	videoInfo, err := QueryVideoInfo(strings.Split(serial, "/")[0], isBV)
 	if err != nil {
 		logger.Error().Err(err).Msg("Unable to query video info")
 		return nil, err
 	}
-	path, err := ChangeFileName(serial, videoInfo.Title)
+	path, err := ChangeFileName(strings.Replace(serial, "/", ".", -1), videoInfo.Title)
 	if err != nil {
-		logger.Error().Err(err).Msg("Unable to change filename")
+		logger.Error().Err(err).Msg("Unable to change filename, filename: " + videoInfo.Title)
 		return nil, err
 	}
 

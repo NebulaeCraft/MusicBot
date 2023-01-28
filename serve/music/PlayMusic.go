@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"os/exec"
 	"strconv"
+	"time"
 )
 
 // ffmpeg -re -i ./res/${music.id}.mp3 -af volume=${this.status.volume}dB -ab 120k -acodec libopus -f mpegts zmq:tcp://127.0.0.1:5559
-func PlayMusic(music *Music) {
+func PlayMusic(musicReq *Music) {
 	logger := config.Logger
-	logger.Info().Msgf(">>> Play music: %s from %s to %s <<<", music.Name, music.File, PlayStatus.DstAddr)
-	PlayStatus.Music = music
+	logger.Info().Msgf(">>> Play musicReq: %s from %s to %s <<<", musicReq.Name, musicReq.File, PlayStatus.DstAddr)
+	PlayStatus.Music = musicReq
 	s := <-PlayStatus.KOOKSignel
 	if s == STOP {
 		RunKOOKVoice(PlayStatus.Channel)
@@ -21,14 +22,17 @@ func PlayMusic(music *Music) {
 		RunKOOKVoice(PlayStatus.Channel)
 	}
 	s = <-PlayStatus.FFmpegSignel
+	if musicReq == nil {
+		return
+	}
 	if s == STOP {
-		RunFFmpeg(music.File)
+		RunFFmpeg(musicReq.File)
 	} else {
 		StopFFmpeg(PlayStatus.FFmpegCmd)
 		<-PlayStatus.FFmpegSignel
-		RunFFmpeg(music.File)
+		RunFFmpeg(musicReq.File)
 	}
-	logger.Info().Msg(fmt.Sprintf(">>> Start playing %s <<<", music.Name))
+	logger.Info().Msg(fmt.Sprintf(">>> Start playing %s <<<", musicReq.Name))
 }
 
 func RunKOOKVoice(channel int64) (*exec.Cmd, error) {
@@ -57,26 +61,13 @@ func RunKOOKVoice(channel int64) (*exec.Cmd, error) {
 
 func StopKOOKVoice(cmd *exec.Cmd) {
 	logger := config.Logger
+	time.Sleep(3 * time.Second)
 	err := cmd.Process.Kill()
 	logger.Info().Msg(fmt.Sprintf(">>> Stop KOOKVoice, pid: %d <<<", cmd.Process.Pid))
 	if err != nil {
 		logger.Error().Err(err).Msg(fmt.Sprintf("Failed to stop KOOKVoice, pid: %d", cmd.Process.Pid))
 	}
 	PlayStatus.KOOKSignel <- STOP
-}
-
-func ChangeChannel(channel int64) {
-	logger := config.Logger
-	if <-PlayStatus.KOOKSignel == STOP {
-		PlayStatus.Channel = channel
-		PlayStatus.KOOKSignel <- STOP
-	} else {
-		StopKOOKVoice(PlayStatus.KOOKCmd)
-		PlayStatus.Channel = channel
-		<-PlayStatus.KOOKSignel
-		RunKOOKVoice(PlayStatus.Channel)
-	}
-	logger.Info().Msg(fmt.Sprintf(">>> Change channel to %d <<<", channel))
 }
 
 func RunFFmpeg(src string) *exec.Cmd {
@@ -120,18 +111,4 @@ func StopFFmpeg(cmd *exec.Cmd) {
 		logger.Error().Err(err).Msg(fmt.Sprintf("Failed to stop FFmpeg, pid: %d", cmd.Process.Pid))
 	}
 	PlayStatus.FFmpegSignel <- STOP
-}
-
-func ChangeVolume(volume int) {
-	logger := config.Logger
-	if <-PlayStatus.FFmpegSignel == STOP {
-		PlayStatus.Volume = volume
-		PlayStatus.FFmpegSignel <- STOP
-	} else {
-		StopFFmpeg(PlayStatus.FFmpegCmd)
-		PlayStatus.Volume = volume
-		<-PlayStatus.FFmpegSignel
-		RunFFmpeg(PlayStatus.Music.File)
-	}
-	logger.Info().Msg(fmt.Sprintf(">>> Change volume to %d <<<", volume))
 }

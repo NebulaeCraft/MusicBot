@@ -184,7 +184,7 @@ func QueryVideoInfo(serial string, isBV bool) (*VideoInfo, error) {
 	return &VideoInfo{
 		Cover:    videoInfo.Data.Pic + "@130w_130h.jpg",
 		Up:       videoInfo.Data.Owner.Name,
-		Title:    strings.Replace(videoInfo.Data.Title, "/", " ", -1),
+		Title:    strings.Replace(videoInfo.Data.Title, "/", "", -1),
 		Duration: videoInfo.Data.Duration,
 	}, nil
 }
