@@ -15,19 +15,34 @@ func SendMusicList(ctx *kook.KmarkdownMessageContext, musicsList *music.MusicsLi
 		Theme: kook.CardThemeSuccess,
 		Size:  kook.CardSizeLg,
 	}
-	for _, musicCtx := range musicsList.Musics {
+	if len(musicsList.Musics) == 0 {
 		section := kook.CardMessageSection{
 			Mode: kook.CardMessageSectionModeRight,
 			Text: kook.CardMessageElementKMarkdown{
-				Content: "**歌曲：** " + musicCtx.Name + "\n**歌手：** " + strings.Join(musicCtx.Artists, ", ") + "\n**时长：** " + time.Duration(musicCtx.LastTime*1000000).String(),
+				Content: "**歌曲列表为空**",
 			},
 		}
 		cardMsg.AddModule(section.SetAccessory(&kook.CardMessageElementButton{
-			Theme: kook.CardThemeDanger,
-			Text:  "删除",
+			Theme: kook.CardThemeInfo,
+			Text:  "好了好了，我知道了",
 			Click: string(kook.CardMessageElementButtonClickReturnVal),
-			Value: "DEL" + musicCtx.ID,
+			Value: "CONFIRM",
 		}))
+	} else {
+		for _, musicCtx := range musicsList.Musics {
+			section := kook.CardMessageSection{
+				Mode: kook.CardMessageSectionModeRight,
+				Text: kook.CardMessageElementKMarkdown{
+					Content: "**歌曲：** " + musicCtx.Name + "\n**歌手：** " + strings.Join(musicCtx.Artists, ", ") + "\n**时长：** " + time.Duration(musicCtx.LastTime*1000000).String(),
+				},
+			}
+			cardMsg.AddModule(section.SetAccessory(&kook.CardMessageElementButton{
+				Theme: kook.CardThemeDanger,
+				Text:  "删除",
+				Click: string(kook.CardMessageElementButtonClickReturnVal),
+				Value: "DEL" + musicCtx.ID,
+			}))
+		}
 	}
 	cardMsgCtx, err := cardMsg.MarshalJSON()
 	if err != nil {

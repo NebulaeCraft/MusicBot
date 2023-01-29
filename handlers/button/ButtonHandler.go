@@ -18,6 +18,8 @@ func ButtonHan(ctx *kook.MessageButtonClickContext) {
 	} else if strings.HasPrefix(ctx.Extra.Value, "DEL") {
 		ctx.Extra.Value = strings.TrimPrefix(ctx.Extra.Value, "DEL")
 		DeleteMusicButtonHan(ctx)
+	} else if ctx.Extra.Value == "CONFIRM" {
+		music.SendMsg(music.PlayStatus.Ctx, "你知道个🔨")
 	}
 }
 
