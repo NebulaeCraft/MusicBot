@@ -8,9 +8,10 @@ import (
 	"MusicBot/serve/music"
 	"MusicBot/serve/music/Functions"
 	"fmt"
-	"github.com/lonelyevil/kook"
 	"strconv"
 	"strings"
+
+	"github.com/lonelyevil/kook"
 )
 
 func MessageHan(ctx *kook.KmarkdownMessageContext) {
@@ -178,6 +179,20 @@ func ChangeVolumeMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	logger := config.Logger
 	if ctx.Common.Content == "now" {
 		music.SendMsg(ctx, fmt.Sprintf("当前音量: %d", music.PlayStatus.Volume))
+		return
+	}
+	if ctx.Common.Content == "anal" {
+		if music.PlayStatus.Music == nil {
+			music.SendMsg(ctx, "当前无音乐播放")
+			return
+		}
+		analRespChan, logChan := music.StatVolume(music.PlayStatus.Music.File)
+		analResp := <-analRespChan
+		log := <-logChan
+		msg := fmt.Sprintf("音量分析: 输入 %.2f(dB)/%.2f(LUFS) -> 音量均衡 %.2f(dB)/%.2f(LUFS) -> 增益 %.2f(dB)", analResp.OriginVolumedB, analResp.OriginVolumeLUFS, analResp.LoudnormVolumedB, analResp.LoudnormVolumeLUFS, analResp.GainVolumedB)
+		logger.Info().Msg(log)
+		logger.Info().Msg(msg)
+		music.SendMsg(ctx, msg)
 		return
 	}
 	volume, err := strconv.ParseInt(ctx.Common.Content, 10, 64)

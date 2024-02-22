@@ -78,7 +78,7 @@ func RunFFmpeg(src string) *exec.Cmd {
 		"-i",
 		src,
 		"-af",
-		fmt.Sprintf("volume=%ddB", PlayStatus.Volume),
+		fmt.Sprintf("loudnorm=i=-16,volume=%ddB", PlayStatus.Volume),
 		"-ab",
 		"120k",
 		"-acodec",
@@ -90,11 +90,12 @@ func RunFFmpeg(src string) *exec.Cmd {
 	go func() {
 		PlayStatus.FFmpegSignel <- RUN
 		PlayStatus.FFmpegCmd = cmd
-		//out, err := cmd.CombinedOutput()
-		err := cmd.Run()
+		out, err := cmd.CombinedOutput()
+		// err := cmd.Run()
 		if err != nil {
 			logger.Error().Err(err).Msg(fmt.Sprintf("Failed to run ffmpeg, pid: %d", cmd.Process.Pid))
-			//logger.Error().Msg(string(out))
+			logger.Error().Msg(cmd.String())
+			logger.Error().Msg(string(out))
 		} else {
 			logger.Info().Msg(fmt.Sprintf(">>> FFmpeg finished, pid: %d <<<", cmd.Process.Pid))
 			PlayStatus.PlaySignel <- STOP
