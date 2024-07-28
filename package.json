@@ -1,0 +1,18 @@
+{
+  "name": "kanade",
+  "version": "0.1.0",
+  "description": "Kanade musicbot for KOOK",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --nolazy -r ts-node/register -r tsconfig-paths/register src/index.ts | bunyan",
+    "pm2": "node src/pm2/index.js"
+  },
+  "author": "KiraKiseki",
+  "license": "MIT",
+  "dependencies": {
+    "kasumi.js": "^0.6.0",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.1.2",
+    "upath": "^2.0.1"
+  }
+}

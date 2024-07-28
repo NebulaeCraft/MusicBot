@@ -1,6 +1,7 @@
 .idea
-config/config.yaml
+src/config/*
 .DS_Store
 assets/music/*
 *.exe
 assets/dist/
+node_modules
