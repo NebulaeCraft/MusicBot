@@ -1,11 +1,23 @@
-BotToken: TOKEN
-WebPort: 8080
-NeteaseApi: http://localhost:3000
-NetEaseCookie: COOKIE
+BotToken: YOUR_TOKEN
+WebPort: 8081
+NetEaseApi: http://localhost:3002
+NetEaseCookie: YOUR_COOKIE
 QQApi: http://localhost:3200
 VoicePort: 5559
-KOOKVoice: ./assets/dist/kookvoice-arm64-darwin
+KOOKVoice: ./kookvoice-amd64-linux
 SearchLimit: 10
 VoiceChannel:
-  - Name: Sample
-    ID: CHANNELID
+  - Name: CHANNEL1
+    ID: 161419611111111
+  - Name: CHANNEL2
+    ID: 161419622222222
+WhitelistChannel:
+  - 6280594433333333
+  - 628059444444444
+AdminUser:
+  - Name: Admin1
+    ID: 2979555555
+LLM:
+  SiliconFlowToken: YOURTOKEN
+  Model: THUDM/glm-4-9b-chat
+  Temperature: 0.3

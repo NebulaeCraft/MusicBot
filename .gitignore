@@ -4,3 +4,4 @@ config/config.yaml
 assets/music/*
 *.exe
 assets/dist/
+MusicBot

@@ -14,11 +14,12 @@ import (
 func DownloadVideoAudio(serial string) {
 	cmd := exec.Command("bilix",
 		"get_video",
-		"https://www.bilibili.com/video/"+serial,
+		fmt.Sprintf("https://www.bilibili.com/video/%s", serial),
 		"--only-audio",
 		"--dir",
 		"./assets/music",
 	)
+	fmt.Println(cmd.String())
 	err := cmd.Run()
 	if err != nil {
 		fmt.Println(err)
@@ -47,7 +48,9 @@ func QueryBiliAudio(serial string, isBV bool) (*music.Music, error) {
 	} else {
 		DownloadVideoAudio("AV" + serial)
 	}
-	videoInfo, err := QueryVideoInfo(strings.Split(serial, "/")[0], isBV)
+
+	serial = strings.Split(serial, "/")[0]
+	videoInfo, err := QueryVideoInfo(strings.Split(serial, "?")[0], isBV)
 	if err != nil {
 		logger.Error().Err(err).Msg("Unable to query video info")
 		return nil, err

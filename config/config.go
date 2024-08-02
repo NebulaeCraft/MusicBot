@@ -21,6 +21,16 @@ type envConfig struct {
 		Name string `yaml:"Name"`
 		ID   int64  `yaml:"ID"`
 	} `yaml:"VoiceChannel"`
+	WhitelistChannel []int `yaml:"WhitelistChannel"`
+	AdminUser        []struct {
+		Name string `yaml:"Name"`
+		ID   int    `yaml:"ID"`
+	} `yaml:"AdminUser"`
+	LLM struct {
+		SiliconFlowToken string  `yaml:"SiliconFlowToken"`
+		Model            string  `yaml:"Model"`
+		Temperature      float64 `yaml:"Temperature"`
+	} `yaml:"LLM"`
 }
 
 var Config *envConfig

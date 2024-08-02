@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strconv"
+	"syscall"
 	"time"
 )
 
@@ -21,6 +22,7 @@ func PlayMusic(musicReq *Music) {
 		<-PlayStatus.KOOKSignel
 		RunKOOKVoice(PlayStatus.Channel)
 	}
+
 	s = <-PlayStatus.FFmpegSignel
 	if musicReq == nil {
 		return
@@ -46,6 +48,10 @@ func RunKOOKVoice(channel int64) (*exec.Cmd, error) {
 		"-t",
 		config.Config.BotToken,
 	)
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
+
 	var err error
 	go func() {
 		PlayStatus.KOOKSignel <- RUN
@@ -62,7 +68,7 @@ func RunKOOKVoice(channel int64) (*exec.Cmd, error) {
 func StopKOOKVoice(cmd *exec.Cmd) {
 	logger := config.Logger
 	time.Sleep(3 * time.Second)
-	err := cmd.Process.Kill()
+	err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	logger.Info().Msg(fmt.Sprintf(">>> Stop KOOKVoice, pid: %d <<<", cmd.Process.Pid))
 	if err != nil {
 		logger.Error().Err(err).Msg(fmt.Sprintf("Failed to stop KOOKVoice, pid: %d", cmd.Process.Pid))
@@ -72,6 +78,7 @@ func StopKOOKVoice(cmd *exec.Cmd) {
 
 func RunFFmpeg(src string) *exec.Cmd {
 	logger := config.Logger
+	time.Sleep(3 * time.Second)
 	logger.Info().Msg(">>> Run FFmpeg <<<")
 	cmd := exec.Command("ffmpeg",
 		"-re",

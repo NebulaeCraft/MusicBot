@@ -2,12 +2,15 @@ package message
 
 import (
 	"MusicBot/config"
+	"MusicBot/middleware"
 	"MusicBot/serve/Bili"
+	"MusicBot/serve/LLM"
 	"MusicBot/serve/NetEase"
 	"MusicBot/serve/QQ"
 	"MusicBot/serve/music"
 	"MusicBot/serve/music/Functions"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -22,23 +25,25 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 	logger.Info().Msg("Message received: " + ctx.Common.Content)
 	music.PlayStatus.Ctx = ctx
 	if ctx.Common.Content == "/stop" {
+		err := middleware.AdminMiddleware(ctx)
+		if err != nil {
+			return
+		}
+
 		music.PlayStatus.CanAppend = false
 		music.SendMsg(ctx, "已停止添加新音乐")
 		return
 	} else if ctx.Common.Content == "/start" {
+		err := middleware.AdminMiddleware(ctx)
+		if err != nil {
+			return
+		}
+
 		music.PlayStatus.CanAppend = true
 		music.SendMsg(ctx, "可以添加新音乐")
 		return
 	}
-	if strings.HasPrefix(ctx.Common.Content, "/n ") {
-		// Netease Music
-		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/n ")
-		NetEaseMusicMessageHandler(ctx)
-	} else if strings.HasPrefix(ctx.Common.Content, "/s ") {
-		// Netease Music Search
-		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/s ")
-		NetEaseMusicSearchMessageHandler(ctx)
-	} else if strings.HasPrefix(ctx.Common.Content, "ping") {
+	if strings.HasPrefix(ctx.Common.Content, "ping") {
 		// Ping
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "ping")
 		_, _ = ctx.Session.MessageCreate(&kook.MessageCreate{
@@ -48,10 +53,24 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 				Quote:    ctx.Common.MsgID,
 			},
 		})
+	} else if strings.HasPrefix(ctx.Common.Content, "/version") {
+		// Version
+		_, _ = ctx.Session.MessageCreate(&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				TargetID: ctx.Common.TargetID,
+				Content:  "golang 1.0",
+				Quote:    ctx.Common.MsgID,
+			},
+		})
 	} else if strings.HasPrefix(ctx.Common.Content, "/reload") {
 		// Reload
+		err := middleware.AdminMiddleware(ctx)
+		if err != nil {
+			return
+		}
+
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "ping")
-		err := config.LoadConfig("config/config.yaml")
+		err = config.LoadConfig("config/config.yaml")
 		if err != nil {
 			logger.Error().Err(err).Msg("Reload config failed")
 			return
@@ -65,26 +84,62 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 		})
 	} else if strings.HasPrefix(ctx.Common.Content, "/v ") {
 		// Change volume
+		err := middleware.AdminMiddleware(ctx)
+		if err != nil {
+			return
+		}
+
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/v ")
 		ChangeVolumeMessageHandler(ctx)
 	} else if strings.HasPrefix(ctx.Common.Content, "/c ") {
 		// Change channel
+		err := middleware.AdminMiddleware(ctx)
+		if err != nil {
+			return
+		}
+
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/c ")
 		ChangeChannelMessageHandler(ctx)
-	} else if strings.HasPrefix(ctx.Common.Content, "/b ") {
-		// Bilibili
-		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/b ")
-		BiliMessageHandler(ctx)
-	} else if strings.HasPrefix(ctx.Common.Content, "/q ") {
-		// QQ Music
-		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/q ")
-		QQMusicMessageHandler(ctx)
+	} else if strings.HasPrefix(ctx.Common.Content, "/n ") || strings.HasPrefix(ctx.Common.Content, "/s ") || strings.HasPrefix(ctx.Common.Content, "/b ") || strings.HasPrefix(ctx.Common.Content, "/q ") {
+		// If command is from valid whitelist channel
+
+		err := middleware.WhitelistChannelMiddleware(ctx)
+		if err != nil {
+			return
+		}
+
+		if strings.HasPrefix(ctx.Common.Content, "/n ") {
+			// Netease Music
+			ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/n ")
+			NetEaseMusicMessageHandler(ctx)
+		} else if strings.HasPrefix(ctx.Common.Content, "/s ") {
+			// Netease Music Search
+			ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/s ")
+			NetEaseMusicSearchMessageHandler(ctx)
+		} else if strings.HasPrefix(ctx.Common.Content, "/b ") {
+			// Bilibili
+			ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/b ")
+			BiliMessageHandler(ctx)
+		} else if strings.HasPrefix(ctx.Common.Content, "/q ") {
+			// QQ Music
+			ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/q ")
+			QQMusicMessageHandler(ctx)
+		}
 	} else if ctx.Common.Content == "/skip" {
 		// Skip
 		SkipMusicMessageHandler(ctx)
 	} else if ctx.Common.Content == "/list" {
 		// List
 		Functions.SendMusicList(ctx, &music.Musics)
+	} else if strings.HasPrefix(ctx.Common.Content, "/llm ") {
+		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/llm ")
+
+		resp, err := LLM.LLMQuery(ctx.Common.Content)
+		if err != nil {
+			music.SendMsg(ctx, fmt.Sprintf("Error: %s, Response: %s", err.Error(), resp))
+		} else {
+			music.SendMsg(ctx, resp)
+		}
 	}
 }
 
@@ -101,20 +156,21 @@ func NetEaseMusicSearchMessageHandler(ctx *kook.KmarkdownMessageContext) {
 
 func NetEaseMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	logger := config.Logger
-	if strings.Contains(ctx.Common.Content, "?id=") {
-		ctx.Common.Content = strings.Split(ctx.Common.Content, "?id=")[1]
-	} else if strings.Contains(ctx.Common.Content, "&id=") {
-		ctx.Common.Content = strings.Split(ctx.Common.Content, "&id=")[1]
+
+	re := regexp.MustCompile(`song\?id=(\d+)`)
+	match := re.FindStringSubmatch(ctx.Common.Content)
+	if len(match) > 1 {
+		ctx.Common.Content = match[1]
 	}
-	if strings.Contains(ctx.Common.Content, "&userid=") {
-		ctx.Common.Content = strings.Split(ctx.Common.Content, "&userid=")[0]
-	}
-	id, err := strconv.ParseInt(strings.Split(ctx.Common.Content, "]")[0], 10, 64)
+
+	id, err := strconv.ParseInt(ctx.Common.Content, 10, 64)
 	if err != nil {
 		logger.Error().Err(err).Msg("Parse music id failed")
 		music.SendMsg(ctx, "解析音乐ID失败：输入不合法")
 		return
 	}
+
+	logger.Info().Msgf("Query music for id: %d", id)
 	musicResult, err := NetEase.QueryMusic(int(id))
 	if err != nil {
 		logger.Error().Err(err).Msg("Query music failed")

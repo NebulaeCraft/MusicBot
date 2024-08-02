@@ -2,6 +2,7 @@ package music
 
 import (
 	"github.com/lonelyevil/kook"
+	"time"
 )
 
 func (m *MusicsList) Add(M *Music) {
@@ -42,6 +43,7 @@ func (m *MusicsList) GetIndexByID(id string) int {
 func (m *MusicsList) Play(ctx *kook.KmarkdownMessageContext) {
 	s := <-PlayStatus.PlaySignel
 	if s == STOP {
+		time.Sleep(5 * time.Second)
 		go PlayMusic(&m.Musics[0])
 		SendMusicCard(ctx, &m.Musics[0])
 		m.Musics = m.Musics[1:]
@@ -51,6 +53,7 @@ func (m *MusicsList) Play(ctx *kook.KmarkdownMessageContext) {
 func (m *MusicsList) PlayBtn(ctx *kook.MessageButtonClickContext) {
 	s := <-PlayStatus.PlaySignel
 	if s == STOP {
+		time.Sleep(5 * time.Second)
 		go PlayMusic(&m.Musics[0])
 		SendMusicCard(PlayStatus.Ctx, &m.Musics[0])
 		m.Musics = m.Musics[1:]

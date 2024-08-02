@@ -217,7 +217,8 @@ func QueryMusicURL(id int) (string, error) {
 		Quality: "standard",
 	}
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", config.Config.NetEaseAPI+"/song/url/v1", nil)
+	apiUrl := fmt.Sprintf("%s/song/url/v1", config.Config.NetEaseAPI)
+	req, err := http.NewRequest("GET", apiUrl, nil)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to create request")
 		return "", err

@@ -20,7 +20,10 @@ func ButtonHan(ctx *kook.MessageButtonClickContext) {
 		DeleteMusicButtonHan(ctx)
 	} else if ctx.Extra.Value == "CONFIRM" {
 		music.SendMsg(music.PlayStatus.Ctx, "你知道个🔨")
+		return
 	}
+
+	_ = ctx.Session.MessageDelete(ctx.Common.MsgID)
 }
 
 func NetEaseSearchButtonHan(ctx *kook.MessageButtonClickContext) {
