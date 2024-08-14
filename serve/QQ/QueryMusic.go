@@ -2,7 +2,7 @@ package QQ
 
 import (
 	"MusicBot/config"
-	"MusicBot/serve/music"
+	"MusicBot/serve/player"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -246,11 +246,11 @@ type MusicInfoResp struct {
 	} `json:"response"`
 }
 
-func QueryMusic(id string) (*music.Music, error) {
+func QueryMusic(id string) (*player.Music, error) {
 	logger := config.Logger
-	if music.Musics.GetMusicByID(id) != nil {
-		logger.Info().Msg(fmt.Sprintf("Music %s added from cache", music.Musics.GetMusicByID(id).Name))
-		return music.Musics.GetMusicByID(id), nil
+	if player.MusicPlayer.GetMusicByID(id) != nil {
+		logger.Info().Msg(fmt.Sprintf("Music %s added from cache", player.MusicPlayer.GetMusicByID(id).Name))
+		return player.MusicPlayer.GetMusicByID(id), nil
 	}
 	url, err := QueryMusicURL(id)
 	if err != nil {
@@ -335,7 +335,7 @@ func DownloadMusic(id string, url string) (string, error) {
 	return "./assets/music/Q" + id + ".mp3", nil
 }
 
-func QueryMusicInfo(id string) (*music.Music, error) {
+func QueryMusicInfo(id string) (*player.Music, error) {
 	logger := config.Logger
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", config.Config.QQAPI+"/getSongInfo", nil)
@@ -378,7 +378,7 @@ func QueryMusicInfo(id string) (*music.Music, error) {
 	for _, v := range musicInfoResp.Response.Songinfo.Data.TrackInfo.Singer {
 		ar = append(ar, v.Name)
 	}
-	return &music.Music{
+	return &player.Music{
 		ID:       id,
 		Name:     musicInfoResp.Response.Songinfo.Data.TrackInfo.Name,
 		Artists:  ar,

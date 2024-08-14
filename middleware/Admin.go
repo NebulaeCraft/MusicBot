@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"MusicBot/config"
-	"MusicBot/serve/music"
+	"MusicBot/serve/player"
 	"MusicBot/serve/privilege"
 	"errors"
 	"github.com/lonelyevil/kook"
@@ -17,7 +17,7 @@ func AdminMiddleware(ctx *kook.KmarkdownMessageContext) error {
 		return errors.New("unable to find admin list")
 	}
 	if !isAdmin {
-		music.SendMsg(ctx, "该命令仅管理员可用")
+		player.MusicPlayer.SendMsg("该命令仅管理员可用")
 		logger.Error().Msg("insufficient privileges for userID: " + ctx.Common.AuthorID)
 		return errors.New("insufficient privileges for userID: " + ctx.Common.AuthorID)
 	}

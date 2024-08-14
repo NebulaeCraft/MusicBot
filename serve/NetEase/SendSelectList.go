@@ -2,21 +2,22 @@ package NetEase
 
 import (
 	"MusicBot/config"
-	"MusicBot/serve/music"
+	"MusicBot/serve/player"
 	"fmt"
-	"github.com/lonelyevil/kook"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lonelyevil/kook"
 )
 
-func SendSelectList(ctx *kook.KmarkdownMessageContext, musicsList *music.MusicsList) {
+func SendSelectList(ctx *kook.KmarkdownMessageContext, musicsList *[]player.Music) {
 	logger := config.Logger
 	cardMsg := kook.CardMessageCard{
 		Theme: kook.CardThemeSuccess,
 		Size:  kook.CardSizeLg,
 	}
-	for _, music := range musicsList.Musics {
+	for _, music := range *musicsList {
 		ID, _ := strconv.Atoi(music.ID)
 		musicInfo, err := QueryMusicInfo(ID)
 		if err != nil {
@@ -42,11 +43,16 @@ func SendSelectList(ctx *kook.KmarkdownMessageContext, musicsList *music.MusicsL
 		return
 	}
 	cardMsgCtxStr := fmt.Sprintf("[%s]", cardMsgCtx)
-	_, _ = ctx.Session.MessageCreate(&kook.MessageCreate{
+	resp, _ := ctx.Session.MessageCreate(&kook.MessageCreate{
 		MessageCreateBase: kook.MessageCreateBase{
 			TargetID: ctx.Common.TargetID,
 			Content:  cardMsgCtxStr,
 			Type:     kook.MessageTypeCard,
 		},
 	})
+
+	go func() {
+		time.Sleep(5 * time.Second)
+		_ = ctx.Session.MessageDelete(resp.MsgID)
+	}()
 }

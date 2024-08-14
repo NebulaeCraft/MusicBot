@@ -7,8 +7,7 @@ import (
 	"MusicBot/serve/LLM"
 	"MusicBot/serve/NetEase"
 	"MusicBot/serve/QQ"
-	"MusicBot/serve/music"
-	"MusicBot/serve/music/Functions"
+	"MusicBot/serve/player"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -23,26 +22,7 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 		return
 	}
 	logger.Info().Msg("Message received: " + ctx.Common.Content)
-	music.PlayStatus.Ctx = ctx
-	if ctx.Common.Content == "/stop" {
-		err := middleware.AdminMiddleware(ctx)
-		if err != nil {
-			return
-		}
-
-		music.PlayStatus.CanAppend = false
-		music.SendMsg(ctx, "已停止添加新音乐")
-		return
-	} else if ctx.Common.Content == "/start" {
-		err := middleware.AdminMiddleware(ctx)
-		if err != nil {
-			return
-		}
-
-		music.PlayStatus.CanAppend = true
-		music.SendMsg(ctx, "可以添加新音乐")
-		return
-	}
+	player.MusicPlayer.SetCtx(ctx)
 	if strings.HasPrefix(ctx.Common.Content, "ping") {
 		// Ping
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "ping")
@@ -130,15 +110,15 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 		SkipMusicMessageHandler(ctx)
 	} else if ctx.Common.Content == "/list" {
 		// List
-		Functions.SendMusicList(ctx, &music.Musics)
+		player.MusicPlayer.SendMusicList()
 	} else if strings.HasPrefix(ctx.Common.Content, "/llm ") {
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/llm ")
 
 		resp, err := LLM.LLMQuery(ctx.Common.Content)
 		if err != nil {
-			music.SendMsg(ctx, fmt.Sprintf("Error: %s, Response: %s", err.Error(), resp))
+			player.MusicPlayer.SendMsg(fmt.Sprintf("Error: %s, Response: %s", err.Error(), resp))
 		} else {
-			music.SendMsg(ctx, resp)
+			player.MusicPlayer.SendMsg(resp)
 		}
 	}
 }
@@ -148,7 +128,7 @@ func NetEaseMusicSearchMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	searchList, err := NetEase.SearchMusic(ctx.Common.Content)
 	if err != nil {
 		logger.Error().Err(err).Msg("Search music failed")
-		music.SendMsg(ctx, "搜索音乐失败")
+		player.MusicPlayer.SendMsg("搜索音乐失败")
 		return
 	}
 	NetEase.SendSelectList(ctx, searchList)
@@ -166,7 +146,7 @@ func NetEaseMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	id, err := strconv.ParseInt(ctx.Common.Content, 10, 64)
 	if err != nil {
 		logger.Error().Err(err).Msg("Parse music id failed")
-		music.SendMsg(ctx, "解析音乐ID失败：输入不合法")
+		player.MusicPlayer.SendMsg("解析音乐ID失败：输入不合法")
 		return
 	}
 
@@ -174,12 +154,10 @@ func NetEaseMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	musicResult, err := NetEase.QueryMusic(int(id))
 	if err != nil {
 		logger.Error().Err(err).Msg("Query music failed")
-		music.SendMsg(ctx, "查询音乐失败")
+		player.MusicPlayer.SendMsg("查询音乐失败")
 		return
 	}
-	music.SendMsg(ctx, fmt.Sprintf("%s 已加入播放列表", musicResult.Name))
-	music.Musics.Add(musicResult)
-	go music.Musics.Play(ctx)
+	player.MusicPlayer.AddMusic(musicResult)
 }
 
 func QQMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
@@ -191,22 +169,24 @@ func QQMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	musicResult, err := QQ.QueryMusic(id)
 	if err != nil {
 		logger.Error().Err(err).Msg("Query music failed")
-		music.SendMsg(ctx, "查询音乐失败")
+		player.MusicPlayer.SendMsg("查询音乐失败")
 		return
 	}
-	music.SendMsg(ctx, fmt.Sprintf("%s 已加入播放列表", musicResult.Name))
-	music.Musics.Add(musicResult)
-	go music.Musics.Play(ctx)
+	player.MusicPlayer.AddMusic(musicResult)
 }
 
 func BiliMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	logger := config.Logger
+
+	re := regexp.MustCompile(`(?i)(av\d+|bv[a-zA-Z0-9]{10})(\/)?(\?p=\d+)?`)
+	ctx.Common.Content = re.FindString(ctx.Common.Content)
+
 	if !(strings.HasPrefix(ctx.Common.Content, "av") || strings.HasPrefix(ctx.Common.Content, "AV") || strings.HasPrefix(ctx.Common.Content, "bv") || strings.HasPrefix(ctx.Common.Content, "BV")) {
 		logger.Error().Msg("Parse video id failed")
-		music.SendMsg(ctx, "解析AV/BV失败：输入不合法")
+		player.MusicPlayer.SendMsg("解析AV/BV失败：输入不合法")
 		return
 	}
-	var musicResult *music.Music
+	var musicResult *player.Music
 	var err error
 	if strings.HasPrefix(ctx.Common.Content, "av") {
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "av")
@@ -223,67 +203,44 @@ func BiliMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	}
 	if err != nil {
 		logger.Error().Err(err).Msg("Query audio failed")
-		music.SendMsg(ctx, "查询视频失败："+err.Error())
+		player.MusicPlayer.SendMsg("查询视频失败：" + err.Error())
 		return
 	}
-	music.SendMsg(ctx, fmt.Sprintf("%s 已加入播放列表", musicResult.Name))
-	music.Musics.Add(musicResult)
-	go music.Musics.Play(ctx)
+	player.MusicPlayer.AddMusic(musicResult)
 }
 
 func ChangeVolumeMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	logger := config.Logger
 	if ctx.Common.Content == "now" {
-		music.SendMsg(ctx, fmt.Sprintf("当前音量: %d", music.PlayStatus.Volume))
-		return
-	}
-	if ctx.Common.Content == "anal" {
-		if music.PlayStatus.Music == nil {
-			music.SendMsg(ctx, "当前无音乐播放")
-			return
-		}
-		analRespChan, logChan := music.StatVolume(music.PlayStatus.Music.File)
-		analResp := <-analRespChan
-		log := <-logChan
-		msg := fmt.Sprintf("音量分析: 输入 %.2f(dB)/%.2f(LUFS) -> 音量均衡 %.2f(dB)/%.2f(LUFS) -> 增益 %.2f(dB)", analResp.OriginVolumedB, analResp.OriginVolumeLUFS, analResp.LoudnormVolumedB, analResp.LoudnormVolumeLUFS, analResp.GainVolumedB)
-		logger.Info().Msg(log)
-		logger.Info().Msg(msg)
-		music.SendMsg(ctx, msg)
+		player.MusicPlayer.SendMsg(fmt.Sprintf("当前音量: %d", player.MusicPlayer.Volume))
 		return
 	}
 	volume, err := strconv.ParseInt(ctx.Common.Content, 10, 64)
 	if err != nil {
 		logger.Error().Err(err).Msg("Parse volume failed")
-		music.SendMsg(ctx, "解析音量失败：输入不合法")
+		player.MusicPlayer.SendMsg("解析音量失败：输入不合法")
 		return
 	}
-	Functions.ChangeVolume(int(volume))
-	music.SendMsg(ctx, fmt.Sprintf("音量已调整为 %ddB", volume))
+	player.MusicPlayer.SetVolume(int(volume))
+	player.MusicPlayer.SendMsg(fmt.Sprintf("音量已调整为 %ddB", volume))
 }
 
 func ChangeChannelMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	logger := config.Logger
 	if ctx.Common.Content == "list" {
-		music.SendMsg(ctx, fmt.Sprintf("可用频道列表: %s", config.ListChannel()))
+		player.MusicPlayer.SendMsg(fmt.Sprintf("可用频道列表: %s", config.ListChannel()))
 		return
 	}
 	channel, err := config.FindChannelID(ctx.Common.Content)
 	if err != nil {
 		logger.Error().Err(err).Msg("Find channel failed")
-		music.SendMsg(ctx, "解析频道失败：频道不存在")
+		player.MusicPlayer.SendMsg("解析频道失败：频道不存在")
 		return
 	}
-	Functions.ChangeChannel(channel)
-	music.SendMsg(ctx, fmt.Sprintf("频道已切换为 %s", ctx.Common.Content))
+	player.MusicPlayer.SetChannel(channel)
+	player.MusicPlayer.SendMsg(fmt.Sprintf("频道已切换为 %s", ctx.Common.Content))
 }
 
 func SkipMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
-	logger := config.Logger
-	if music.PlayStatus.Music == nil {
-		music.SendMsg(ctx, "当前无音乐播放")
-		return
-	}
-	logger.Info().Msg(fmt.Sprintf("Skipped music %s", music.PlayStatus.Music.Name))
-	music.SendMsg(ctx, fmt.Sprintf("将跳过歌曲 %s", music.PlayStatus.Music.Name))
-	Functions.SkipMusic()
+	player.MusicPlayer.SkipMusic()
 }

@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"MusicBot/config"
-	"MusicBot/serve/music"
+	"MusicBot/serve/player"
 	"MusicBot/serve/privilege"
 	"errors"
 	"github.com/lonelyevil/kook"
@@ -17,7 +17,7 @@ func WhitelistChannelMiddleware(ctx *kook.KmarkdownMessageContext) error {
 		return errors.New("unable to find whitelisted channel")
 	}
 	if !isInWhitelistChannel {
-		music.SendMsg(ctx, "该频道不可点歌")
+		player.MusicPlayer.SendMsg("该频道不可点歌")
 		logger.Error().Msg("channel not in whitelist for channel: " + ctx.Common.TargetID)
 		return errors.New("channel not in whitelist")
 	}

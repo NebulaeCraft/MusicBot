@@ -2,7 +2,7 @@ package NetEase
 
 import (
 	"MusicBot/config"
-	"MusicBot/serve/music"
+	"MusicBot/serve/player"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -71,7 +71,7 @@ type SearchReq struct {
 	Type     int
 }
 
-func SearchMusic(keywords string) (*music.MusicsList, error) {
+func SearchMusic(keywords string) (*[]player.Music, error) {
 	logger := config.Logger
 	searchReq := &SearchReq{
 		Keywords: keywords,
@@ -111,15 +111,15 @@ func SearchMusic(keywords string) (*music.MusicsList, error) {
 		logger.Error().Err(err).Msg("Failed to unmarshal response")
 		return nil, err
 	}
-	var musicsList music.MusicsList
+	var musicsList []player.Music
 	for i, song := range searchResp.Result.Songs {
 		if i > config.Config.SearchLimit {
 			break
 		}
-		musicResp := &music.Music{
+		musicResp := &player.Music{
 			ID: strconv.Itoa(song.ID),
 		}
-		musicsList.Musics = append(musicsList.Musics, *musicResp)
+		musicsList = append(musicsList, *musicResp)
 	}
 	return &musicsList, nil
 }

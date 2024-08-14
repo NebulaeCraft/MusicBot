@@ -2,7 +2,7 @@ package Bili
 
 import (
 	"MusicBot/config"
-	"MusicBot/serve/music"
+	"MusicBot/serve/player"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -19,7 +19,6 @@ func DownloadVideoAudio(serial string) {
 		"--dir",
 		"./assets/music",
 	)
-	fmt.Println(cmd.String())
 	err := cmd.Run()
 	if err != nil {
 		fmt.Println(err)
@@ -32,7 +31,6 @@ func ChangeFileName(serial, title string) (string, error) {
 		return "", err
 	}
 	for _, file := range dir {
-		//if strings.HasPrefix(file.Name(), title[:int(len(title)/2)]) {
 		if !(strings.HasPrefix(file.Name(), "Q") || strings.HasPrefix(file.Name(), "B") || strings.HasPrefix(file.Name(), "N") || strings.HasPrefix(file.Name(), "U")) {
 			os.Rename("./assets/music/"+file.Name(), "./assets/music/B"+serial+".mp3")
 			return "./assets/music/B" + serial + ".mp3", nil
@@ -41,7 +39,7 @@ func ChangeFileName(serial, title string) (string, error) {
 	return "", errors.New("No such file")
 }
 
-func QueryBiliAudio(serial string, isBV bool) (*music.Music, error) {
+func QueryBiliAudio(serial string, isBV bool) (*player.Music, error) {
 	logger := config.Logger
 	if isBV {
 		DownloadVideoAudio("BV" + serial)
@@ -61,7 +59,7 @@ func QueryBiliAudio(serial string, isBV bool) (*music.Music, error) {
 		return nil, err
 	}
 
-	musicResp := &music.Music{
+	musicResp := &player.Music{
 		ID:       serial,
 		Name:     videoInfo.Title,
 		Artists:  []string{videoInfo.Up},

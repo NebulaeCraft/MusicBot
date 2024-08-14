@@ -2,7 +2,7 @@ package NetEase
 
 import (
 	"MusicBot/config"
-	"MusicBot/serve/music"
+	"MusicBot/serve/player"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -184,11 +184,11 @@ type MusicInfoResp struct {
 	Code int `json:"code"`
 }
 
-func QueryMusic(id int) (*music.Music, error) {
+func QueryMusic(id int) (*player.Music, error) {
 	logger := config.Logger
-	if music.Musics.GetMusicByID(strconv.Itoa(id)) != nil {
-		logger.Info().Msg(fmt.Sprintf("Music %s added from cache", music.Musics.GetMusicByID(strconv.Itoa(id)).Name))
-		return music.Musics.GetMusicByID(strconv.Itoa(id)), nil
+	if player.MusicPlayer.GetMusicByID(strconv.Itoa(id)) != nil {
+		logger.Info().Msg(fmt.Sprintf("Music %s added from cache", player.MusicPlayer.GetMusicByID(strconv.Itoa(id)).Name))
+		return player.MusicPlayer.GetMusicByID(strconv.Itoa(id)), nil
 	}
 	url, err := QueryMusicURL(id)
 	if err != nil {
@@ -280,7 +280,7 @@ func DownloadMusic(id int, url string) (string, error) {
 	return "./assets/music/N" + strconv.Itoa(id) + ".mp3", nil
 }
 
-func QueryMusicInfo(id int) (*music.Music, error) {
+func QueryMusicInfo(id int) (*player.Music, error) {
 	logger := config.Logger
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", config.Config.NetEaseAPI+"/song/detail", nil)
@@ -319,7 +319,7 @@ func QueryMusicInfo(id int) (*music.Music, error) {
 	for _, v := range musicInfoResp.Songs[0].Ar {
 		ar = append(ar, v.Name)
 	}
-	return &music.Music{
+	return &player.Music{
 		ID:       strconv.Itoa(id),
 		Name:     musicInfoResp.Songs[0].Name,
 		Artists:  ar,

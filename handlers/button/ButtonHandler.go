@@ -3,11 +3,12 @@ package button
 import (
 	"MusicBot/config"
 	"MusicBot/serve/NetEase"
-	"MusicBot/serve/music"
+	"MusicBot/serve/player"
 	"fmt"
-	"github.com/lonelyevil/kook"
 	"strconv"
 	"strings"
+
+	"github.com/lonelyevil/kook"
 )
 
 func ButtonHan(ctx *kook.MessageButtonClickContext) {
@@ -19,39 +20,29 @@ func ButtonHan(ctx *kook.MessageButtonClickContext) {
 		ctx.Extra.Value = strings.TrimPrefix(ctx.Extra.Value, "DEL")
 		DeleteMusicButtonHan(ctx)
 	} else if ctx.Extra.Value == "CONFIRM" {
-		music.SendMsg(music.PlayStatus.Ctx, "你知道个🔨")
-		return
+		player.MusicPlayer.SendMsg("你知道个🔨")
 	}
-
-	_ = ctx.Session.MessageDelete(ctx.Common.MsgID)
 }
 
 func NetEaseSearchButtonHan(ctx *kook.MessageButtonClickContext) {
 	logger := config.Logger
-	if music.PlayStatus.CanAppend == false {
-		music.SendMsg(music.PlayStatus.Ctx, "当前播放列表已锁定，无法添加新的音乐")
-		return
-	}
 	id, _ := strconv.ParseInt(ctx.Extra.Value, 10, 64)
 	musicResult, err := NetEase.QueryMusic(int(id))
 	if err != nil {
 		logger.Error().Err(err).Msg("Query music failed")
-		music.SendMsg(music.PlayStatus.Ctx, "查询音乐失败")
+		player.MusicPlayer.SendMsg("查询音乐失败")
 		return
 	}
-	music.SendMsg(music.PlayStatus.Ctx, fmt.Sprintf("%s 已加入播放列表", musicResult.Name))
-	music.Musics.Add(musicResult)
-	go music.Musics.PlayBtn(ctx)
+	player.MusicPlayer.AddMusic(musicResult)
 }
 
 func DeleteMusicButtonHan(ctx *kook.MessageButtonClickContext) {
 	logger := config.Logger
-	index := music.Musics.GetIndexByID(ctx.Extra.Value)
-	if index == -1 {
+	name := player.MusicPlayer.RemoveMusic(ctx.Extra.Value)
+	if name == "" {
 		logger.Error().Msg("Delete music failed")
-		music.SendMsg(music.PlayStatus.Ctx, "删除音乐失败")
+		player.MusicPlayer.SendMsg("删除音乐失败")
 		return
 	}
-	music.SendMsg(music.PlayStatus.Ctx, fmt.Sprintf("已删除音乐 %s", music.Musics.Musics[index].Name))
-	music.Musics.Musics = append(music.Musics.Musics[:index], music.Musics.Musics[index+1:]...)
+	player.MusicPlayer.SendMsg(fmt.Sprintf("已删除音乐 %s", name))
 }

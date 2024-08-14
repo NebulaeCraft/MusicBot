@@ -16,10 +16,11 @@ type envConfig struct {
 	QQAPI         string `yaml:"QQApi"`
 	VoicePort     int    `yaml:"VoicePort"`
 	KOOKVoice     string `yaml:"KOOKVoice"`
+	DefaultVolume int    `yaml:"DefaultVolume"`
 	SearchLimit   int    `yaml:"SearchLimit"`
 	VoiceChannel  []struct {
 		Name string `yaml:"Name"`
-		ID   int64  `yaml:"ID"`
+		ID   int    `yaml:"ID"`
 	} `yaml:"VoiceChannel"`
 	WhitelistChannel []int `yaml:"WhitelistChannel"`
 	AdminUser        []struct {
@@ -55,7 +56,7 @@ func LoadConfig(filename string) error {
 	return nil
 }
 
-func FindChannelID(name string) (int64, error) {
+func FindChannelID(name string) (int, error) {
 	for _, v := range Config.VoiceChannel {
 		if v.Name == name {
 			return v.ID, nil
