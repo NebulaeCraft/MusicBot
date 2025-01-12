@@ -49,16 +49,27 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 			return
 		}
 
-		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "ping")
+		_, _ = ctx.Session.MessageCreate(&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				TargetID: ctx.Common.TargetID,
+				Content:  "正在重新加载配置",
+				Quote:    ctx.Common.MsgID,
+			},
+		})
+
 		err = config.LoadConfig("config/config.yaml")
 		if err != nil {
 			logger.Error().Err(err).Msg("Reload config failed")
 			return
 		}
+
+		player.MusicPlayer.DefaultPlaylist, _ = NetEase.FetchPlaylist(config.Config.NetEaseDefaultPlaylist)
+		logger.Info().Msgf("Default playlist length: %d", len(*player.MusicPlayer.DefaultPlaylist))
+
 		_, _ = ctx.Session.MessageCreate(&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				TargetID: ctx.Common.TargetID,
-				Content:  "配置文件已重载",
+				Content:  fmt.Sprintf("配置已重新加载，当前默认歌单长度：%d", len(*player.MusicPlayer.DefaultPlaylist)),
 				Quote:    ctx.Common.MsgID,
 			},
 		})
@@ -80,6 +91,26 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 
 		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/c ")
 		ChangeChannelMessageHandler(ctx)
+	} else if strings.HasPrefix(ctx.Common.Content, "/d ") {
+		// If command is from valid whitelist channel
+
+		err := middleware.WhitelistChannelMiddleware(ctx)
+		if err != nil {
+			return
+		}
+
+		ctx.Common.Content = strings.TrimPrefix(ctx.Common.Content, "/d ")
+
+		if strings.HasPrefix(ctx.Common.Content, "av") || strings.HasPrefix(ctx.Common.Content, "AV") || strings.HasPrefix(ctx.Common.Content, "bv") || strings.HasPrefix(ctx.Common.Content, "BV") || strings.Contains(ctx.Common.Content, "bilibili") {
+			// Bilibili
+			BiliMessageHandler(ctx)
+		} else if strings.Contains(ctx.Common.Content, "163") {
+			// Netease Music
+			NetEaseMusicMessageHandler(ctx)
+		} else {
+			// Failed
+			player.MusicPlayer.SendMsg("无法解析命令，请尝试手动指定音乐来源")
+		}
 	} else if strings.HasPrefix(ctx.Common.Content, "/n ") || strings.HasPrefix(ctx.Common.Content, "/s ") || strings.HasPrefix(ctx.Common.Content, "/b ") || strings.HasPrefix(ctx.Common.Content, "/q ") {
 		// If command is from valid whitelist channel
 
@@ -108,6 +139,12 @@ func MessageHan(ctx *kook.KmarkdownMessageContext) {
 	} else if ctx.Common.Content == "/skip" {
 		// Skip
 		SkipMusicMessageHandler(ctx)
+	} else if ctx.Common.Content == "/pause" {
+		// Pause
+		PauseMessageHandler(ctx)
+	} else if ctx.Common.Content == "/resume" {
+		// Resume
+		ResumeMessageHandler(ctx)
 	} else if ctx.Common.Content == "/list" {
 		// List
 		player.MusicPlayer.SendMusicList()
@@ -178,8 +215,21 @@ func QQMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 func BiliMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	logger := config.Logger
 
-	re := regexp.MustCompile(`(?i)(av\d+|bv[a-zA-Z0-9]{10})(\/)?(\?p=\d+)?`)
-	ctx.Common.Content = re.FindString(ctx.Common.Content)
+	// re := regexp.MustCompile(`(?i)(av\d+|bv[a-zA-Z0-9]{10})(\/)?(\?p=\d+)?`)
+	// ctx.Common.Content = re.FindString(ctx.Common.Content)
+
+	avbvRegexp := regexp.MustCompile(`(?i)(av\d+|bv[a-zA-Z0-9]{10})`)
+	pidRegexp := regexp.MustCompile(`(\?|\&)p=\d+`)
+	avbv := avbvRegexp.FindString(ctx.Common.Content)
+	pid := pidRegexp.FindString(ctx.Common.Content)
+	if pid != "" {
+		pid = strings.Replace(pid, "&", "?", -1)
+	} else {
+		pid = "?p=1"
+	}
+	ctx.Common.Content = avbv + pid
+
+	logger.Info().Msgf("Query audio for bilibili id: %s", ctx.Common.Content)
 
 	if !(strings.HasPrefix(ctx.Common.Content, "av") || strings.HasPrefix(ctx.Common.Content, "AV") || strings.HasPrefix(ctx.Common.Content, "bv") || strings.HasPrefix(ctx.Common.Content, "BV")) {
 		logger.Error().Msg("Parse video id failed")
@@ -243,4 +293,12 @@ func ChangeChannelMessageHandler(ctx *kook.KmarkdownMessageContext) {
 
 func SkipMusicMessageHandler(ctx *kook.KmarkdownMessageContext) {
 	player.MusicPlayer.SkipMusic()
+}
+
+func PauseMessageHandler(ctx *kook.KmarkdownMessageContext) {
+	player.MusicPlayer.Pause()
+}
+
+func ResumeMessageHandler(ctx *kook.KmarkdownMessageContext) {
+	player.MusicPlayer.Resume()
 }

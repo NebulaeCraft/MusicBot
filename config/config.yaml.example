@@ -2,6 +2,7 @@ BotToken: YOUR_TOKEN
 WebPort: 8081
 NetEaseApi: http://localhost:3002
 NetEaseCookie: YOUR_COOKIE
+NetEaseDefaultPlaylist: 123456789
 QQApi: http://localhost:3200
 VoicePort: 5559
 KOOKVoice: ./kookvoice-amd64-linux

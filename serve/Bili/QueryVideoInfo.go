@@ -1,11 +1,13 @@
 package Bili
 
 import (
+	"MusicBot/config"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -146,6 +148,8 @@ type VideoInfo struct {
 }
 
 func QueryVideoInfo(serial string, isBV bool) (*VideoInfo, error) {
+	logger := config.Logger
+
 	url := "https://api.bilibili.com/x/web-interface/view"
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
@@ -154,6 +158,15 @@ func QueryVideoInfo(serial string, isBV bool) (*VideoInfo, error) {
 		return nil, err
 	}
 	params := req.URL.Query()
+
+	// BV1Zy4y1C7Zp?p=1
+	serialParts := strings.Split(serial, "?p=")
+	logger.Info().Msgf("Query video info for bilibili id: %v", serialParts)
+
+	serial = serialParts[0]
+	pid, _ := strconv.Atoi(serialParts[1])
+	pid -= 1
+
 	if isBV {
 		params.Add("bvid", serial)
 	} else {
@@ -185,6 +198,6 @@ func QueryVideoInfo(serial string, isBV bool) (*VideoInfo, error) {
 		Cover:    videoInfo.Data.Pic + "@130w_130h.jpg",
 		Up:       videoInfo.Data.Owner.Name,
 		Title:    strings.Replace(videoInfo.Data.Title, "/", "", -1),
-		Duration: videoInfo.Data.Duration,
+		Duration: videoInfo.Data.Pages[pid].Duration,
 	}, nil
 }

@@ -41,19 +41,21 @@ func ChangeFileName(serial, title string) (string, error) {
 
 func QueryBiliAudio(serial string, isBV bool) (*player.Music, error) {
 	logger := config.Logger
+
 	if isBV {
-		DownloadVideoAudio("BV" + serial)
+		serial = "BV" + serial
 	} else {
-		DownloadVideoAudio("AV" + serial)
+		serial = "AV" + serial
 	}
 
-	serial = strings.Split(serial, "/")[0]
-	videoInfo, err := QueryVideoInfo(strings.Split(serial, "?")[0], isBV)
+	DownloadVideoAudio(serial)
+
+	videoInfo, err := QueryVideoInfo(serial, isBV)
 	if err != nil {
 		logger.Error().Err(err).Msg("Unable to query video info")
 		return nil, err
 	}
-	path, err := ChangeFileName(strings.Replace(serial, "/", ".", -1), videoInfo.Title)
+	path, err := ChangeFileName(strings.Replace(serial, "?", "#", -1), videoInfo.Title)
 	if err != nil {
 		logger.Error().Err(err).Msg("Unable to change filename, filename: " + videoInfo.Title)
 		return nil, err

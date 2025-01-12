@@ -2,23 +2,25 @@ package config
 
 import (
 	"errors"
-	"github.com/phuslu/log"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"strings"
+
+	"github.com/phuslu/log"
+	"gopkg.in/yaml.v3"
 )
 
 type envConfig struct {
-	BotToken      string `yaml:"BotToken"`
-	WebPort       int    `yaml:"WebPort"`
-	NetEaseAPI    string `yaml:"NetEaseApi"`
-	NetEaseCookie string `yaml:"NetEaseCookie"`
-	QQAPI         string `yaml:"QQApi"`
-	VoicePort     int    `yaml:"VoicePort"`
-	KOOKVoice     string `yaml:"KOOKVoice"`
-	DefaultVolume int    `yaml:"DefaultVolume"`
-	SearchLimit   int    `yaml:"SearchLimit"`
-	VoiceChannel  []struct {
+	BotToken               string `yaml:"BotToken"`
+	WebPort                int    `yaml:"WebPort"`
+	NetEaseAPI             string `yaml:"NetEaseApi"`
+	NetEaseCookie          string `yaml:"NetEaseCookie"`
+	NetEaseDefaultPlaylist string `yaml:"NetEaseDefaultPlaylist"`
+	QQAPI                  string `yaml:"QQApi"`
+	VoicePort              int    `yaml:"VoicePort"`
+	KOOKVoice              string `yaml:"KOOKVoice"`
+	DefaultVolume          int    `yaml:"DefaultVolume"`
+	SearchLimit            int    `yaml:"SearchLimit"`
+	VoiceChannel           []struct {
 		Name string `yaml:"Name"`
 		ID   int    `yaml:"ID"`
 	} `yaml:"VoiceChannel"`

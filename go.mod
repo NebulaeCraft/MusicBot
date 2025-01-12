@@ -3,6 +3,7 @@ module MusicBot
 go 1.19
 
 require (
+	github.com/gammazero/deque v0.2.1
 	github.com/gin-gonic/gin v1.8.2
 	github.com/lonelyevil/kook v0.0.31
 	github.com/lonelyevil/kook/log_adapter/plog v0.0.31
@@ -13,7 +14,6 @@ require (
 require (
 	github.com/bits-and-blooms/bitset v1.2.2 // indirect
 	github.com/bits-and-blooms/bloom/v3 v3.2.0 // indirect
-	github.com/gammazero/deque v0.2.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
